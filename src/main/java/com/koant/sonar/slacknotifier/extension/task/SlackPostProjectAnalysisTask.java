@@ -6,7 +6,7 @@ import com.github.seratch.jslack.api.webhook.WebhookResponse;
 import com.koant.sonar.slacknotifier.common.component.AbstractSlackNotifyingComponent;
 import com.koant.sonar.slacknotifier.common.component.ProjectConfig;
 import org.sonar.api.ce.posttask.PostProjectAnalysisTask;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.Configuration;
 import org.sonar.api.utils.LocalizedMessages;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -15,10 +15,6 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * Created by 616286 on 3.6.2016.
- * Modified by poznachowski
- */
 public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponent implements PostProjectAnalysisTask {
 
     private static final Logger LOG = Loggers.get(SlackPostProjectAnalysisTask.class);
@@ -26,12 +22,12 @@ public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponen
     private final LocalizedMessages l10n;
     private final Slack slackClient;
 
-    public SlackPostProjectAnalysisTask(Settings settings) {
-        this(Slack.getInstance(), settings, new LocalizedMessages(Locale.ENGLISH, "core"));
+    public SlackPostProjectAnalysisTask(Configuration configuration) {
+        this(Slack.getInstance(), configuration, new LocalizedMessages(Locale.ENGLISH, "core"));
     }
 
-    public SlackPostProjectAnalysisTask(Slack slackClient, Settings settings, LocalizedMessages l10n) {
-        super(settings);
+    public SlackPostProjectAnalysisTask(Slack slackClient, Configuration configuration, LocalizedMessages l10n) {
+        super(configuration);
         this.slackClient = slackClient;
         this.l10n = l10n;
     }
@@ -57,7 +53,7 @@ public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponen
             return;
         }
 
-        LOG.info("Slack notification will be sent: " + analysis.toString());
+        LOG.info("Slack notification will be sent: " + analysis);
 
         Payload payload = ProjectAnalysisPayloadBuilder.of(analysis)
                 .l10n(l10n)

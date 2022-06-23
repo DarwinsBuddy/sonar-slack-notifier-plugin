@@ -1,14 +1,10 @@
 package com.koant.sonar.slacknotifier.common.component;
 
 import com.koant.sonar.slacknotifier.common.SlackNotifierProp;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.Configuration;
 
 import java.util.Objects;
 
-/**
- * Created by ak on 17/10/16.
- * Modified by poznachowski
- */
 public class ProjectConfig {
     private final String projectKey;
     private final String slackChannel;
@@ -23,7 +19,7 @@ public class ProjectConfig {
     /**
      * Cloning constructor
      *
-     * @param c
+     * @param c config
      */
     public ProjectConfig(ProjectConfig c) {
         this.projectKey = c.getProjectKey();
@@ -31,11 +27,11 @@ public class ProjectConfig {
         this.qgFailOnly = c.isQgFailOnly();
     }
 
-    static ProjectConfig create(Settings settings, String configurationId) {
+    static ProjectConfig create(Configuration configuration, String configurationId) {
         String configurationPrefix = SlackNotifierProp.CONFIG.property() + "." + configurationId + ".";
-        String projectKey = settings.getString(configurationPrefix + SlackNotifierProp.PROJECT.property());
-        String slackChannel = settings.getString(configurationPrefix + SlackNotifierProp.CHANNEL.property());
-        boolean qgFailOnly = settings.getBoolean(configurationPrefix + SlackNotifierProp.QG_FAIL_ONLY.property());
+        String projectKey = configuration.get(configurationPrefix + SlackNotifierProp.PROJECT.property()).orElse(null);
+        String slackChannel = configuration.get(configurationPrefix + SlackNotifierProp.CHANNEL.property()).orElse(null);
+        boolean qgFailOnly = configuration.getBoolean(configurationPrefix + SlackNotifierProp.QG_FAIL_ONLY.property()).orElse(false);
         return new ProjectConfig(projectKey, slackChannel, qgFailOnly);
     }
 
@@ -68,11 +64,9 @@ public class ProjectConfig {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ProjectConfig{");
-        sb.append("projectKey='").append(projectKey).append('\'');
-        sb.append(", slackChannel='").append(slackChannel).append('\'');
-        sb.append(", qgFailOnly=").append(qgFailOnly);
-        sb.append('}');
-        return sb.toString();
+        return "ProjectConfig{" + "projectKey='" + projectKey + '\'' +
+            ", slackChannel='" + slackChannel + '\'' +
+            ", qgFailOnly=" + qgFailOnly +
+            '}';
     }
 }

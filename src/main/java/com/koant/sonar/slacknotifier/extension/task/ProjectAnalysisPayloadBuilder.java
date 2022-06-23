@@ -15,22 +15,15 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Created by ak on 18/10/16.
- * Modified by poznachowski
- */
-
 public class ProjectAnalysisPayloadBuilder {
     private static final Logger LOG = Loggers.get(ProjectAnalysisPayloadBuilder.class);
 
     private static final String SLACK_GOOD_COLOUR = "good";
-    private static final String SLACK_WARNING_COLOUR = "warning";
     private static final String SLACK_DANGER_COLOUR = "danger";
     private static final Map<QualityGate.Status, String> statusToColor = new EnumMap<>(QualityGate.Status.class);
 
     static {
         statusToColor.put(QualityGate.Status.OK, SLACK_GOOD_COLOUR);
-        statusToColor.put(QualityGate.Status.WARN, SLACK_WARNING_COLOUR);
         statusToColor.put(QualityGate.Status.ERROR, SLACK_DANGER_COLOUR);
     }
 
@@ -40,7 +33,7 @@ public class ProjectAnalysisPayloadBuilder {
     private String slackUser;
     private String projectUrl;
 
-    private DecimalFormat percentageFormat;
+    private final DecimalFormat percentageFormat;
 
     private ProjectAnalysisPayloadBuilder(PostProjectAnalysisTask.ProjectAnalysis analysis) {
         this.analysis = analysis;
@@ -121,10 +114,10 @@ public class ProjectAnalysisPayloadBuilder {
     }
 
     /**
-     * See https://api.slack.com/docs/message-attachments#message_formatting
+     * See <a href="https://api.slack.com/docs/message-attachments#message_formatting">message_formatting</a>
      *
-     * @param condition
-     * @return
+     * @param condition quality gate condition
+     * @return translated field
      */
     private Field translate(QualityGate.Condition condition) {
         String l10nKey = "metric." + condition.getMetricKey() + ".name";
@@ -178,17 +171,14 @@ public class ProjectAnalysisPayloadBuilder {
 
     private void appendValueOperatorPrefix(QualityGate.Condition condition, StringBuilder sb) {
         switch (condition.getOperator()) {
-            case EQUALS:
-                sb.append("==");
-                break;
-            case NOT_EQUALS:
-                sb.append("!=");
-                break;
             case GREATER_THAN:
                 sb.append(">");
                 break;
             case LESS_THAN:
                 sb.append("<");
+                break;
+            default:
+                LOG.error("Unsupported operator");
                 break;
         }
     }
@@ -204,9 +194,8 @@ public class ProjectAnalysisPayloadBuilder {
             case CoreMetrics.NEW_COVERAGE_KEY:
             case CoreMetrics.NEW_SQALE_DEBT_RATIO_KEY:
                 return true;
+            default:
+                return false;
         }
-        return false;
     }
-
-
 }

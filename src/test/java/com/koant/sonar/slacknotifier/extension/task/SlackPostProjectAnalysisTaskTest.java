@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
+import org.sonar.api.config.internal.ConfigurationBridge;
 import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.config.internal.Settings;
 import org.sonar.api.utils.LocalizedMessages;
@@ -20,18 +21,13 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by 616286 on 3.6.2016.
- * Modified by poznachowski
- */
 public class SlackPostProjectAnalysisTaskTest {
 
     private static final String HOOK = "hook";
-    private static final String DIFFERENT_KEY = "different:key";
 
     CaptorPostProjectAnalysisTask postProjectAnalysisTask;
     SlackPostProjectAnalysisTask task;
-    private Slack slackClient;
+    public Slack slackClient;
     private Settings settings;
     LocalizedMessages l10n;
 
@@ -52,37 +48,36 @@ public class SlackPostProjectAnalysisTaskTest {
         WebhookResponse webhookResponse = WebhookResponse.builder().code(200).build();
         when(slackClient.send(anyString(), any(Payload.class))).thenReturn(webhookResponse);
         l10n = Mockito.mock(LocalizedMessages.class);
-        Mockito.when(l10n.format(anyString())).thenAnswer((Answer<String>) invocation -> (String) invocation.getArguments()[2]);
-        task = new SlackPostProjectAnalysisTask(slackClient, settings, l10n);
+        task = new SlackPostProjectAnalysisTask(slackClient, new ConfigurationBridge(settings), l10n);
     }
 
     @Test
     public void shouldCall() throws Exception {
         Analyses.simple(postProjectAnalysisTask);
-        task.finished(postProjectAnalysisTask.getProjectAnalysis());
+        task.finished(new CaptorPostProjectAnalysisTask.ContextImpl(postProjectAnalysisTask.getProjectAnalysis(), null));
         Mockito.verify(slackClient, times(1)).send(eq(HOOK), any(Payload.class));
     }
 
     @Test
-    public void shouldSkipIfPluginDisabled() throws Exception {
+    public void shouldSkipIfPluginDisabled() {
         settings.setProperty(ENABLED.property(), "false");
         Analyses.simple(postProjectAnalysisTask);
-        task.finished(postProjectAnalysisTask.getProjectAnalysis());
+        task.finished(new CaptorPostProjectAnalysisTask.ContextImpl(postProjectAnalysisTask.getProjectAnalysis(), null));
         Mockito.verifyZeroInteractions(slackClient);
     }
 
     @Test
-    public void shouldSkipIfNoConfigFound() throws Exception {
+    public void shouldSkipIfNoConfigFound() {
         Analyses.simpleDifferentKey(postProjectAnalysisTask);
-        task.finished(postProjectAnalysisTask.getProjectAnalysis());
+        task.finished(new CaptorPostProjectAnalysisTask.ContextImpl(postProjectAnalysisTask.getProjectAnalysis(), null));
         Mockito.verifyZeroInteractions(slackClient);
     }
 
     @Test
-    public void shouldSkipIfReportFailedQualityGateButOk() throws Exception {
+    public void shouldSkipIfReportFailedQualityGateButOk() {
         settings.setProperty(CONFIG.property() + "." + PROJECT_KEY + "." + QG_FAIL_ONLY.property(), "true");
         Analyses.simple(postProjectAnalysisTask);
-        task.finished(postProjectAnalysisTask.getProjectAnalysis());
+        task.finished(new CaptorPostProjectAnalysisTask.ContextImpl(postProjectAnalysisTask.getProjectAnalysis(), null));
         Mockito.verifyZeroInteractions(slackClient);
     }
 }

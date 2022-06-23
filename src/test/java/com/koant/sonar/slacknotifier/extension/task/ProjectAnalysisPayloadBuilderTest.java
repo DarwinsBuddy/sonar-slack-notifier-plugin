@@ -1,28 +1,20 @@
 package com.koant.sonar.slacknotifier.extension.task;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.github.seratch.jslack.api.model.Attachment;
 import com.github.seratch.jslack.api.model.Field;
 import com.github.seratch.jslack.api.webhook.Payload;
 import com.koant.sonar.slacknotifier.common.component.ProjectConfig;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.sonar.api.utils.LocalizedMessages;
-import org.sonar.api.utils.System2;
-import org.sonar.core.platform.PluginRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Created by ak on 18/10/16.
- * Modified by poznachowski
- */
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ProjectAnalysisPayloadBuilderTest {
     private static final boolean QG_FAIL_ONLY = true;
     CaptorPostProjectAnalysisTask postProjectAnalysisTask;
@@ -33,10 +25,7 @@ public class ProjectAnalysisPayloadBuilderTest {
     @Before
     public void before() {
         postProjectAnalysisTask = new CaptorPostProjectAnalysisTask();
-
         // org/sonar/l10n/core.properties
-        PluginRepository pluginRepository = Mockito.mock(PluginRepository.class);
-        System2 system2 = Mockito.mock(System2.class);
         l10n = new LocalizedMessages(Locale.ENGLISH, "core");
 
         defaultLocale = Locale.getDefault();
@@ -67,7 +56,7 @@ public class ProjectAnalysisPayloadBuilderTest {
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
                 .l10n(l10n)
-                .projectUrl("http://localhist:9000/dashboard?id=project:key")
+                .projectUrl("http://localhost:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();
         assertThat(payload).isEqualTo(expected());
@@ -88,7 +77,7 @@ public class ProjectAnalysisPayloadBuilderTest {
                 .build());
         fields.add(Field.builder()
                 .title("Technical Debt Ratio on New Code: OK")
-                .value("0.01%, warning if >2.0%, error if >10.0%")
+                .value("0.01%, error if >10.0%")
                 .valueShortEnough(false)
                 .build());
         fields.add(Field.builder()
@@ -103,7 +92,7 @@ public class ProjectAnalysisPayloadBuilderTest {
                 .build());
         return Payload.builder()
                 .text("Project [Project Name] analyzed. See "
-                    + "http://localhist:9000/dashboard?id=project:key. Quality gate status: OK")
+                    + "http://localhost:9000/dashboard?id=project:key. Quality gate status: OK")
                 .channel("#channel")
                 .username("CKSSlackNotifier")
                 .attachments(attachments)
@@ -111,13 +100,13 @@ public class ProjectAnalysisPayloadBuilderTest {
     }
 
     @Test
-    public void shouldShowOnlyExceededConditionsIfProjectConfigReportOnlyOnFailedQualityGateWay() throws Exception {
+    public void shouldShowOnlyExceededConditionsIfProjectConfigReportOnlyOnFailedQualityGateWay() {
         Analyses.qualityGateError2Of3ConditionsFailed(postProjectAnalysisTask);
         ProjectConfig projectConfig = new ProjectConfig("key", "#channel", QG_FAIL_ONLY);
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
                 .l10n(l10n)
-                .projectUrl("http://localhist:9000/dashboard?id=project:key")
+                .projectUrl("http://localhost:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();
 
@@ -126,17 +115,17 @@ public class ProjectAnalysisPayloadBuilderTest {
                 .flatExtracting(Attachment::getFields)
                 .hasSize(2)
                 .extracting(Field::getTitle)
-                .contains("Functions: WARN", "Issues: ERROR");
+                .contains("Functions: ERROR", "Violations: ERROR");
     }
 
     @Test
-    public void buildPayloadWithoutQualityGateWay() throws Exception {
+    public void buildPayloadWithoutQualityGateWay() {
         Analyses.noQualityGate(postProjectAnalysisTask);
         ProjectConfig projectConfig = new ProjectConfig("key", "#channel", false);
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
                 .l10n(l10n)
-                .projectUrl("http://localhist:9000/dashboard?id=project:key")
+                .projectUrl("http://localhost:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();
 
