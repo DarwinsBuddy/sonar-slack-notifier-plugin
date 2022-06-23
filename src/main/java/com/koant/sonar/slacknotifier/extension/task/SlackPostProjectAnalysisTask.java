@@ -7,11 +7,12 @@ import com.koant.sonar.slacknotifier.common.component.AbstractSlackNotifyingComp
 import com.koant.sonar.slacknotifier.common.component.ProjectConfig;
 import org.sonar.api.ce.posttask.PostProjectAnalysisTask;
 import org.sonar.api.config.Settings;
-import org.sonar.api.i18n.I18n;
+import org.sonar.api.utils.LocalizedMessages;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -22,21 +23,22 @@ public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponen
 
     private static final Logger LOG = Loggers.get(SlackPostProjectAnalysisTask.class);
 
-    private final I18n i18n;
+    private final LocalizedMessages l10n;
     private final Slack slackClient;
 
-    public SlackPostProjectAnalysisTask(Settings settings, I18n i18n) {
-        this(Slack.getInstance(), settings, i18n);
+    public SlackPostProjectAnalysisTask(Settings settings) {
+        this(Slack.getInstance(), settings, new LocalizedMessages(Locale.ENGLISH, "core"));
     }
 
-    public SlackPostProjectAnalysisTask(Slack slackClient, Settings settings, I18n i18n) {
+    public SlackPostProjectAnalysisTask(Slack slackClient, Settings settings, LocalizedMessages l10n) {
         super(settings);
         this.slackClient = slackClient;
-        this.i18n = i18n;
+        this.l10n = l10n;
     }
 
     @Override
-    public void finished(ProjectAnalysis analysis) {
+    public void finished(Context context) {
+        ProjectAnalysis analysis = context.getProjectAnalysis();
         refreshSettings();
         if (!isPluginEnabled()) {
             LOG.info("Slack notifier plugin disabled, skipping. Settings are [{}]", logRelevantSettings());
@@ -46,7 +48,7 @@ public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponen
         String projectKey = analysis.getProject().getKey();
 
         Optional<ProjectConfig> projectConfigOptional = getProjectConfig(projectKey);
-        if (!projectConfigOptional.isPresent()) {
+        if (projectConfigOptional.isEmpty()) {
             return;
         }
 
@@ -58,7 +60,7 @@ public class SlackPostProjectAnalysisTask extends AbstractSlackNotifyingComponen
         LOG.info("Slack notification will be sent: " + analysis.toString());
 
         Payload payload = ProjectAnalysisPayloadBuilder.of(analysis)
-                .i18n(i18n)
+                .l10n(l10n)
                 .projectConfig(projectConfig)
                 .projectUrl(projectUrl(projectKey))
                 .username(getSlackUser())

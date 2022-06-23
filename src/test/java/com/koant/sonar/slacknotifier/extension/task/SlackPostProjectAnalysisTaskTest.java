@@ -6,16 +6,13 @@ import com.github.seratch.jslack.api.webhook.WebhookResponse;
 import com.koant.sonar.slacknotifier.common.SlackNotifierProp;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.sonar.api.config.MapSettings;
-import org.sonar.api.config.Settings;
-import org.sonar.api.i18n.I18n;
+import org.sonar.api.config.internal.MapSettings;
+import org.sonar.api.config.internal.Settings;
+import org.sonar.api.utils.LocalizedMessages;
 
 import java.io.IOException;
-import java.util.Locale;
 
 import static com.koant.sonar.slacknotifier.common.SlackNotifierProp.*;
 import static com.koant.sonar.slacknotifier.extension.task.Analyses.PROJECT_KEY;
@@ -36,7 +33,7 @@ public class SlackPostProjectAnalysisTaskTest {
     SlackPostProjectAnalysisTask task;
     private Slack slackClient;
     private Settings settings;
-    I18n i18n;
+    LocalizedMessages l10n;
 
     @Before
     public void before() throws IOException {
@@ -54,14 +51,9 @@ public class SlackPostProjectAnalysisTaskTest {
         slackClient = Mockito.mock(Slack.class);
         WebhookResponse webhookResponse = WebhookResponse.builder().code(200).build();
         when(slackClient.send(anyString(), any(Payload.class))).thenReturn(webhookResponse);
-        i18n = Mockito.mock(I18n.class);
-        Mockito.when(i18n.message(Matchers.any(Locale.class), anyString(), anyString())).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return (String) invocation.getArguments()[2];
-            }
-        });
-        task = new SlackPostProjectAnalysisTask(slackClient, settings, i18n);
+        l10n = Mockito.mock(LocalizedMessages.class);
+        Mockito.when(l10n.format(anyString())).thenAnswer((Answer<String>) invocation -> (String) invocation.getArguments()[2]);
+        task = new SlackPostProjectAnalysisTask(slackClient, settings, l10n);
     }
 
     @Test

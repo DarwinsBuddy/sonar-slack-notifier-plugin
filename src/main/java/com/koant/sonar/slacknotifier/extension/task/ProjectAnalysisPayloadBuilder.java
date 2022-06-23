@@ -6,13 +6,12 @@ import com.github.seratch.jslack.api.webhook.Payload;
 import com.koant.sonar.slacknotifier.common.component.ProjectConfig;
 import org.sonar.api.ce.posttask.PostProjectAnalysisTask;
 import org.sonar.api.ce.posttask.QualityGate;
-import org.sonar.api.i18n.I18n;
 import org.sonar.api.measures.CoreMetrics;
+import org.sonar.api.utils.LocalizedMessages;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +34,7 @@ public class ProjectAnalysisPayloadBuilder {
         statusToColor.put(QualityGate.Status.ERROR, SLACK_DANGER_COLOUR);
     }
 
-    I18n i18n;
+    LocalizedMessages l10n;
     PostProjectAnalysisTask.ProjectAnalysis analysis;
     private ProjectConfig projectConfig;
     private String slackUser;
@@ -59,8 +58,8 @@ public class ProjectAnalysisPayloadBuilder {
         return this;
     }
 
-    public ProjectAnalysisPayloadBuilder i18n(I18n i18n) {
-        this.i18n = i18n;
+    public ProjectAnalysisPayloadBuilder l10n(LocalizedMessages l10n) {
+        this.l10n = l10n;
         return this;
     }
 
@@ -78,7 +77,7 @@ public class ProjectAnalysisPayloadBuilder {
         assertNotNull(projectConfig, "projectConfig");
         assertNotNull(projectUrl, "projectUrl");
         assertNotNull(slackUser, "slackUser");
-        assertNotNull(i18n, "i18n");
+        assertNotNull(l10n, "l10n");
         assertNotNull(analysis, "analysis");
 
         QualityGate qualityGate = analysis.getQualityGate();
@@ -128,8 +127,8 @@ public class ProjectAnalysisPayloadBuilder {
      * @return
      */
     private Field translate(QualityGate.Condition condition) {
-        String i18nKey = "metric." + condition.getMetricKey() + ".name";
-        String conditionName = i18n.message(Locale.ENGLISH, i18nKey, condition.getMetricKey());
+        String l10nKey = "metric." + condition.getMetricKey() + ".name";
+        String conditionName = l10n.format(l10nKey);
 
         if (QualityGate.EvaluationStatus.NO_VALUE.equals(condition.getStatus())) {
             // No value for given metric
@@ -141,12 +140,6 @@ public class ProjectAnalysisPayloadBuilder {
             StringBuilder sb = new StringBuilder();
             appendValue(condition, sb);
             appendValuePostfix(condition, sb);
-            if (condition.getWarningThreshold() != null) {
-                sb.append(", warning if ");
-                appendValueOperatorPrefix(condition, sb);
-                sb.append(condition.getWarningThreshold());
-                appendValuePostfix(condition, sb);
-            }
             if (condition.getErrorThreshold() != null) {
                 sb.append(", error if ");
                 appendValueOperatorPrefix(condition, sb);

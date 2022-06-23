@@ -11,8 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.sonar.api.utils.LocalizedMessages;
 import org.sonar.api.utils.System2;
-import org.sonar.core.i18n.DefaultI18n;
 import org.sonar.core.platform.PluginRepository;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.Locale;
 public class ProjectAnalysisPayloadBuilderTest {
     private static final boolean QG_FAIL_ONLY = true;
     CaptorPostProjectAnalysisTask postProjectAnalysisTask;
-    DefaultI18n i18n;
+    LocalizedMessages l10n;
     
     Locale defaultLocale;
 
@@ -37,8 +37,7 @@ public class ProjectAnalysisPayloadBuilderTest {
         // org/sonar/l10n/core.properties
         PluginRepository pluginRepository = Mockito.mock(PluginRepository.class);
         System2 system2 = Mockito.mock(System2.class);
-        i18n = new DefaultI18n(pluginRepository, system2);
-        i18n.start();
+        l10n = new LocalizedMessages(Locale.ENGLISH, "core");
 
         defaultLocale = Locale.getDefault();
         Locale.setDefault(Locale.US);
@@ -52,7 +51,7 @@ public class ProjectAnalysisPayloadBuilderTest {
 
     @Test
     public void testI18nBundle() {
-        assertThat(i18n.message(Locale.ENGLISH, "metric.new_sqale_debt_ratio.short_name", null)).isEqualTo("Debt Ratio on new code");
+        assertThat(l10n.format("metric.new_sqale_debt_ratio.short_name")).isEqualTo("Debt Ratio on new code");
     }
 
     @Test
@@ -67,7 +66,7 @@ public class ProjectAnalysisPayloadBuilderTest {
         ProjectConfig projectConfig = new ProjectConfig("key", "#channel", false);
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
-                .i18n(i18n)
+                .l10n(l10n)
                 .projectUrl("http://localhist:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();
@@ -117,7 +116,7 @@ public class ProjectAnalysisPayloadBuilderTest {
         ProjectConfig projectConfig = new ProjectConfig("key", "#channel", QG_FAIL_ONLY);
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
-                .i18n(i18n)
+                .l10n(l10n)
                 .projectUrl("http://localhist:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();
@@ -136,7 +135,7 @@ public class ProjectAnalysisPayloadBuilderTest {
         ProjectConfig projectConfig = new ProjectConfig("key", "#channel", false);
         Payload payload = ProjectAnalysisPayloadBuilder.of(postProjectAnalysisTask.getProjectAnalysis())
                 .projectConfig(projectConfig)
-                .i18n(i18n)
+                .l10n(l10n)
                 .projectUrl("http://localhist:9000/dashboard?id=project:key")
                 .username("CKSSlackNotifier")
                 .build();

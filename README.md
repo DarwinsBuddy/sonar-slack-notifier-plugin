@@ -1,4 +1,4 @@
-# CKS Sonar Slack Notifier Plugin
+# Sonar Slack Notifier Plugin
 SonarQube plugin for sending notifications to Slack
 
 This plugin sends a Slack message of project analysis outcome to congired project specific slack channel.
@@ -8,7 +8,7 @@ The plugin uses Incoming Web Hook as the integration mechanism with Slack.
 The plugin must be placed in *SONAR_HOME/extensions/plugins* directory and SonarQube must be restarted.
 
 ## Using latest release
-You can find the latest release from https://github.com/kogitant/sonar-slack-notifier-plugin/releases/ page.
+You can find the latest release from https://github.com/zyclonite/sonar-slack-notifier-plugin/releases/ page.
 Download the 
 
 ## From sources
@@ -49,8 +49,7 @@ Notifications can be sent for all Quality Gate statuses, or just for WARNING/ERR
 ![](documentation/screenshots/example_slack_message_all_green.png)
 
 # Works with
-* Tested with SonarQube 6.1 against Slack on 2016.10.17
-* Tested with SonarQube 6.1 against Mattermost 3.5.0 on 2017.01.02
+* Tested with SonarQube 9.5 against Slack
 
 # Inspired by
 * https://github.com/astrebel/sonar-slack-notifier-plugin
